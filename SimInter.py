@@ -192,25 +192,25 @@ def main():
     print(
         "Welcome to the microbial strategy simulation.\n\n"
         "What you should input:\n"
-        "- Enter a positive whole number when asked how many times\n"
+        "1) Enter a positive whole number when asked how many times\n"
         "  the simulation should run for each resource level.\n"
         "- This number tells the program how many different starting\n"
         "  cooperator proportions to test for each resource level.\n"
-        "- Then either enter resource levels manually or choose to\n"
-        "  generate many evenly spaced resource levels from 0 to 1.\n\n"
-        "What the program will output:\n"
+        "2) Then either enter resource levels manually or choose to\n"
+        "  generate many evenly spaced resource levels from 0 to 1.\n"
+        "- The resource level is a representation of nutrient proportion,\n"
+        "  where 0 represents the lowest and 1 the highest.\n\n"
+        "The program will output:\n"
         "- A payoff matrix for each resource level.\n"
         "- A predicted interior equilibrium, if one exists.\n"
         "- A stability classification for that equilibrium.\n"
         "- A results table showing the starting and ending values\n"
         "  for each run.\n"
-        "- Graphs showing how the cooperator proportion changes\n"
-        "  over time.\n"
-        "- Graphs showing cooperator fitness, cheater fitness,\n"
-        "  and average fitness over time.\n"
+        "- A combined graph for each resource level showing:\n"
+        "  cooperator frequency over time and fitness over time.\n"
         "- A final graph comparing predicted equilibrium against\n"
         "  the average simulated final cooperator proportion.\n\n"
-        "How to read the table:\n"
+        "To read the table:\n"
         "- Start C: starting proportion of cooperators.\n"
         "- Start Ch: starting proportion of cheaters.\n"
         "- End C: ending proportion of cooperators.\n"
@@ -218,10 +218,12 @@ def main():
         "- Final Fit C: final fitness of cooperators.\n"
         "- Final Fit Ch: final fitness of cheaters.\n"
         "- Final Avg Fit: final average fitness of the population.\n\n"
-        "How to read the graphs:\n"
+        "To read the graphs:\n"
         "- x0 means the initial proportion of cooperators.\n"
         "- If the cooperator curves move toward the same value,\n"
         "  the system is approaching an equilibrium.\n"
+        "- The dashed horizontal line shows the predicted equilibrium,\n"
+        "  if one exists.\n"
         "- If End C is close to 1, cooperators dominate.\n"
         "- If End C is close to 0, cheaters dominate.\n"
         "- If End C stays between 0 and 1, both strategies coexist.\n"
@@ -253,10 +255,10 @@ def main():
             print("Predicted interior equilibrium: none")
             print("Stability: boundary outcome only")
 
-        plt.figure(figsize=(8, 5))
-
         results_table = []
         final_end_c_values = []
+
+        fig, axes = plt.subplots(2, 1, figsize=(8, 10))
 
         for run in range(num_runs):
             if num_runs == 1:
@@ -296,7 +298,7 @@ def main():
                 final_avg_fit
             ))
 
-            plt.plot(times, cooperator_frequencies, label=f"x0 = {x0:.2f}")
+            axes[0].plot(times, cooperator_frequencies, label=f"x0 = {x0:.2f}")
 
         print_results_table(results_table)
 
@@ -319,13 +321,19 @@ def main():
             )
         print()
 
-        plt.title(f"Cooperator Frequency Over Time, resource = {resource_level:.2f}")
-        plt.xlabel("Time")
-        plt.ylabel("Proportion of Cooperators")
-        plt.ylim(0, 1)
-        plt.grid(True)
-        plt.legend()
-        plt.show()
+        if equilibrium is not None:
+            axes[0].axhline(
+                equilibrium,
+                linestyle="--",
+                label=f"equilibrium = {equilibrium:.2f}"
+            )
+
+        axes[0].set_title(f"Cooperator Frequency Over Time, resource = {resource_level:.2f}")
+        axes[0].set_xlabel("Time")
+        axes[0].set_ylabel("Proportion of Cooperators")
+        axes[0].set_ylim(0, 1)
+        axes[0].grid(True)
+        axes[0].legend()
 
         if num_runs == 1:
             x0 = 0.5
@@ -343,20 +351,21 @@ def main():
             payoff_matrix
         ) = results
 
-        plt.figure(figsize=(8, 5))
-        plt.plot(times, cooperator_fitnesses, label="Cooperator fitness")
-        plt.plot(times, cheater_fitnesses, label="Cheater fitness")
-        plt.plot(times, average_fitnesses, label="Average fitness")
-        plt.title(f"Fitness Over Time, resource = {resource_level:.2f}, x0 = {x0:.2f}")
-        plt.xlabel("Time")
-        plt.ylabel("Fitness")
-        plt.grid(True)
-        plt.legend()
+        axes[1].plot(times, cooperator_fitnesses, label="Cooperator fitness")
+        axes[1].plot(times, cheater_fitnesses, label="Cheater fitness")
+        axes[1].plot(times, average_fitnesses, label="Average fitness")
+        axes[1].set_title(f"Fitness Over Time, resource = {resource_level:.2f}, x0 = {x0:.2f}")
+        axes[1].set_xlabel("Time")
+        axes[1].set_ylabel("Fitness")
+        axes[1].grid(True)
+        axes[1].legend()
+
+        plt.tight_layout()
         plt.show()
 
     plt.figure(figsize=(8, 5))
-    plt.plot(resource_levels, equilibrium_x_values, marker='o', label="Predicted equilibrium")
-    plt.plot(resource_levels, simulated_final_avg_values, marker='s', label="Average simulated final proportion")
+    plt.plot(resource_levels, equilibrium_x_values, marker="o", label="Predicted equilibrium")
+    plt.plot(resource_levels, simulated_final_avg_values, marker="s", label="Average simulated final proportion")
     plt.title("Equilibrium Cooperator Proportion vs Resource Level")
     plt.xlabel("Resource Level")
     plt.ylabel("Proportion of Cooperators")
